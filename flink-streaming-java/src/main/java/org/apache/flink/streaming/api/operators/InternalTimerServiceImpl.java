@@ -30,12 +30,12 @@ import org.apache.flink.streaming.runtime.tasks.ProcessingTimeService;
 import org.apache.flink.util.CloseableIterator;
 import org.apache.flink.util.FlinkRuntimeException;
 import org.apache.flink.util.Preconditions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static org.apache.flink.util.Preconditions.checkArgument;
 import static org.apache.flink.util.Preconditions.checkNotNull;
@@ -44,6 +44,8 @@ import static org.apache.flink.util.Preconditions.checkNotNull;
  * {@link InternalTimerService} that stores timers on the Java heap.
  */
 public class InternalTimerServiceImpl<K, N> implements InternalTimerService<N>, ProcessingTimeCallback {
+
+	public static final Logger log = LoggerFactory.getLogger(InternalTimerServiceImpl.class);
 
 	private final ProcessingTimeService processingTimeService;
 
@@ -95,6 +97,8 @@ public class InternalTimerServiceImpl<K, N> implements InternalTimerService<N>, 
 	/** The restored timers snapshot, if any. */
 	private InternalTimersSnapshot<K, N> restoredTimersSnapshot;
 
+	private int keyGroupsRestored;
+
 	InternalTimerServiceImpl(
 		KeyGroupRange localKeyGroupRange,
 		KeyContext keyContext,
@@ -114,6 +118,7 @@ public class InternalTimerServiceImpl<K, N> implements InternalTimerService<N>, 
 			startIdx = Math.min(keyGroupIdx, startIdx);
 		}
 		this.localKeyGroupRangeStartIdx = startIdx;
+		this.keyGroupsRestored = 0;
 	}
 
 	/**
@@ -259,6 +264,11 @@ public class InternalTimerServiceImpl<K, N> implements InternalTimerService<N>, 
 	 * @return a snapshot containing the timers for the given key-group, and the serializers for them
 	 */
 	public InternalTimersSnapshot<K, N> snapshotTimersForKeyGroup(int keyGroupIdx) {
+
+		if(keyGroupIdx - localKeyGroupRange.getStartKeyGroup() == 0) {
+			logEventTimeTimers("Snapshot");
+		}
+
 		return new InternalTimersSnapshot<>(
 			keySerializer,
 			keySerializer.snapshotConfiguration(),
@@ -295,6 +305,39 @@ public class InternalTimerServiceImpl<K, N> implements InternalTimerService<N>, 
 
 		// restore the processing time timers
 		processingTimeTimersQueue.addAll(restoredTimersSnapshot.getProcessingTimeTimers());
+
+		keyGroupsRestored++;
+		if (keyGroupsRestored == localKeyGroupRange.getNumberOfKeyGroups()) {
+			keyGroupsRestored = 0;
+			logEventTimeTimers("Restored");
+		}
+
+	}
+
+	private void logEventTimeTimers(final String phase) {
+
+		HashMap<Object, AtomicLong> timersPerNamespace = new HashMap<>();
+
+		try (final CloseableIterator<TimerHeapInternalTimer<K, N>> iterator = eventTimeTimersQueue.iterator()) {
+			while (iterator.hasNext()) {
+
+				N namespace = iterator.next().getNamespace();
+				AtomicLong soFar = timersPerNamespace.get(namespace);
+
+				if (soFar == null) {
+					timersPerNamespace.put(namespace, new AtomicLong(1));
+				} else {
+					soFar.incrementAndGet();
+				}
+			}
+		} catch (Exception e) {
+			throw new FlinkRuntimeException("Exception when closing iterator.", e);
+		}
+
+		timersPerNamespace
+			.entrySet()
+			.forEach(entry -> log.debug(phase +": {} -> {}", entry.getKey(), entry.getValue()));
+
 	}
 
 	@VisibleForTesting
