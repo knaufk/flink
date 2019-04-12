@@ -336,7 +336,7 @@ public class InternalTimerServiceImpl<K, N> implements InternalTimerService<N>, 
 
 		timersPerNamespace
 			.entrySet()
-			.forEach(entry -> log.debug(phase +": {} -> {}", entry.getKey(), entry.getValue()));
+			.forEach(entry -> log.debug(phase +": {} -> {} (KeyGroupRange: {} - {})", entry.getKey(), entry.getValue(), localKeyGroupRange.getStartKeyGroup(), localKeyGroupRange.getEndKeyGroup()));
 
 	}
 
