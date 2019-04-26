@@ -218,6 +218,8 @@ public class StreamTaskStateInitializerImpl implements StreamTaskStateInitialize
 			Preconditions.checkArgument(keyGroupRange.contains(keyGroupIdx),
 				"Key Group " + keyGroupIdx + " does not belong to the local range.");
 
+			LOG.debug("Restoring State for Key Group: {}", keyGroupIdx);
+
 			timeServiceManager.restoreStateForKeyGroup(
 				streamProvider.getStream(),
 				keyGroupIdx, environment.getUserClassLoader());

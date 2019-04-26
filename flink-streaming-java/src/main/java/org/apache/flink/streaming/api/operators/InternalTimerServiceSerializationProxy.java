@@ -23,6 +23,8 @@ import org.apache.flink.api.common.typeutils.TypeSerializer;
 import org.apache.flink.core.io.PostVersionedIOReadableWritable;
 import org.apache.flink.core.memory.DataInputView;
 import org.apache.flink.core.memory.DataOutputView;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Map;
@@ -34,6 +36,8 @@ import static org.apache.flink.util.Preconditions.checkNotNull;
  */
 @Internal
 public class InternalTimerServiceSerializationProxy<K> extends PostVersionedIOReadableWritable {
+
+	public static final Logger LOG  = LoggerFactory.getLogger(InternalTimerServiceSerializationProxy.class);
 
 	public static final int VERSION = 1;
 
@@ -107,6 +111,8 @@ public class InternalTimerServiceSerializationProxy<K> extends PostVersionedIORe
 			InternalTimerServiceImpl<K, ?> timerService = registerOrGetTimerService(
 				serviceName,
 				restoredTimersSnapshot);
+
+			LOG.debug("Restoring Timers for InternalTimerService({}) and KeyGroup: {}", keyGroupIdx);
 
 			timerService.restoreTimersForKeyGroup(restoredTimersSnapshot, keyGroupIdx);
 		}
