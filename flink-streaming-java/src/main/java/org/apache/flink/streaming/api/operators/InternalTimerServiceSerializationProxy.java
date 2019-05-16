@@ -100,6 +100,8 @@ public class InternalTimerServiceSerializationProxy<K> extends PostVersionedIORe
 	protected void read(DataInputView in, boolean wasVersioned) throws IOException {
 		int noOfTimerServices = in.readInt();
 
+		LOG.debug("Restoring Timers for InternalTimerServices of KeyGroup: {}",  keyGroupIdx);
+
 		for (int i = 0; i < noOfTimerServices; i++) {
 			String serviceName = in.readUTF();
 
@@ -112,7 +114,7 @@ public class InternalTimerServiceSerializationProxy<K> extends PostVersionedIORe
 				serviceName,
 				restoredTimersSnapshot);
 
-			LOG.debug("Restoring Timers for InternalTimerService({}) and KeyGroup: {}", keyGroupIdx);
+			LOG.debug("Restoring Timers for InternalTimerService({}) and KeyGroup: {}",i, keyGroupIdx);
 
 			timerService.restoreTimersForKeyGroup(restoredTimersSnapshot, keyGroupIdx);
 		}
