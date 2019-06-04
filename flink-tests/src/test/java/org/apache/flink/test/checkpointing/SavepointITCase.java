@@ -700,12 +700,15 @@ public class SavepointITCase extends TestLogger {
 	// Utilities
 	// ------------------------------------------------------------------------
 
-	private static class MiniClusterResourceFactory {
+	public static class MiniClusterResourceFactory {
 		private final int numTaskManagers;
 		private final int numSlotsPerTaskManager;
 		private final Configuration config;
 
-		private MiniClusterResourceFactory(int numTaskManagers, int numSlotsPerTaskManager, Configuration config) {
+		MiniClusterResourceFactory(
+				int numTaskManagers,
+				int numSlotsPerTaskManager,
+				Configuration config) {
 			this.numTaskManagers = numTaskManagers;
 			this.numSlotsPerTaskManager = numSlotsPerTaskManager;
 			this.config = config;
