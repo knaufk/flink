@@ -99,8 +99,7 @@ public class JuhoSavepointRecoveryTest extends TestLogger {
 
 		final Configuration config = new Configuration();
 
-		config.setString("s3.secret-key", "replace_me");
-		config.setString("s3.access-key", "replace_me");
+		config.setString("fs.hdfs.hadoopconf", "file:///home/knaufk/Documents/flink/flink-container/src/test/resources/");
 
 		SavepointITCase.MiniClusterResourceFactory clusterFactory = new SavepointITCase.MiniClusterResourceFactory(
 				1,
