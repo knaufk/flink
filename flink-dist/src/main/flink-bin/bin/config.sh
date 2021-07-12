@@ -175,8 +175,10 @@ if [ -z "$FLINK_OPT_DIR" ]; then FLINK_OPT_DIR=$FLINK_HOME/opt; fi
 # These need to be mangled because they are directly passed to java.
 # The above lib path is used by the shell script to retrieve jars in a
 # directory, so it needs to be unmangled.
+FLINK_CONF_DIR_POINTER=$HOME/.flink/conf_dir_location
 FLINK_HOME_DIR_MANGLED=`manglePath "$FLINK_HOME"`
-if [ -z "$FLINK_CONF_DIR" ]; then FLINK_CONF_DIR=$FLINK_HOME_DIR_MANGLED/conf; fi
+if [ -z "$FLINK_CONF_DIR" ]; then FLINK_CONF_DIR=$FLINK_HOME_DIR_MANGLED/conf; 
+elif [ -f "$FLINK_CONF_DIR_POINTER" ]; then FLINK_CONF_DIR=$(cat $FLINK_CONF_DIR_POINTER); fi
 FLINK_BIN_DIR=$FLINK_HOME_DIR_MANGLED/bin
 DEFAULT_FLINK_LOG_DIR=$FLINK_HOME_DIR_MANGLED/log
 FLINK_CONF_FILE="flink-conf.yaml"
